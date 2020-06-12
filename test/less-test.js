@@ -123,6 +123,38 @@ module.exports = function() {
         });
     }
 
+    function testSourcemapWithoutAnnotation(name, err, compiledLess, doReplacements, sourcemap, baseFolder) {
+        if (err) {
+            fail('ERROR: ' + (err && err.message));
+            return;
+        }
+        // Check the sourceMappingURL at the bottom of the file
+        var expectedSourceMapURL = name + '.css.map',
+            sourceMappingPrefix = '/*# sourceMappingURL=',
+            sourceMappingSuffix = ' */',
+            expectedCSSAppendage = sourceMappingPrefix + expectedSourceMapURL + sourceMappingSuffix;
+        if (compiledLess.endsWith(expectedCSSAppendage)) {
+            fail('ERROR: sourceMappingURL found in ' + baseFolder + '/' + name + '.css.');
+            return;
+        }
+
+        // Even if annotation is not necessary, the map file should be there.
+        fs.readFile(path.join('test/', name) + '.json', 'utf8', function (e, expectedSourcemap) {
+            process.stdout.write('- ' + path.join(baseFolder, name) + ': ');
+            if (sourcemap === expectedSourcemap) {
+                ok('OK');
+            } else if (err) {
+                fail('ERROR: ' + (err && err.message));
+                if (isVerbose) {
+                    process.stdout.write('\n');
+                    process.stdout.write(err.stack + '\n');
+                }
+            } else {
+                difference('FAIL', expectedSourcemap, sourcemap);
+            }
+        });
+    }
+
     function testEmptySourcemap(name, err, compiledLess, doReplacements, sourcemap, baseFolder) {
         process.stdout.write('- ' + path.join(baseFolder, name) + ': ');
         if (err) {
@@ -317,6 +349,10 @@ module.exports = function() {
                 options.sourceMap.sourceMapFilename = options.sourceMap.sourceMapBasepath + '/' + options.sourceMap.sourceMapOutputFilename + '.map';
             }
 
+            if (options.sourceMap && !options.sourceMap.disableSourcemapAnnotation) {
+                options.sourceMap.disableSourcemapAnnotation = options.disableSourcemapAnnotation;
+            }
+
             options.getVars = function(file) {
                 try {
                     return JSON.parse(fs.readFileSync(getFilename(getBasename(file), 'vars', baseFolder), 'utf8'));
@@ -493,6 +529,7 @@ module.exports = function() {
         testSyncronous: testSyncronous,
         testErrors: testErrors,
         testSourcemap: testSourcemap,
+        testSourcemapWithoutAnnotation: testSourcemapWithoutAnnotation,
         testImports: testImports,
         testEmptySourcemap: testEmptySourcemap,
         testNoOptions: testNoOptions,
