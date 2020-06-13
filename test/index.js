@@ -54,16 +54,10 @@ var testMap = [
         function(filename, type, baseFolder) {
             return path.join(baseFolder, filename) + '.json';
         }],
-    [{math: 'strict', strictUnits: true, sourceMap: true, globalVars: true, disableSourcemapAnnotation: true}, 'sourcemaps-disable-annotation/',
-        lessTester.testSourcemapWithoutAnnotation, null, null,
-        function(filename, type, baseFolder) {
-            if (type === 'vars') {
-                return path.join(baseFolder, filename) + '.json';
-            }
-            return path.join('test/sourcemaps-disable-annotation', filename) + '.json';
-        }],
     [{math: 'strict', strictUnits: true, sourceMap: {sourceMapFileInline: true}},
         'sourcemaps-empty/', lessTester.testEmptySourcemap],
+    [{math: 'strict', strictUnits: true, sourceMap: {disableSourcemapAnnotation: true}, globalVars: true, },
+        'sourcemaps-disable-annotation/', lessTester.testSourcemapWithoutAnnotation],
     [{globalVars: true, banner: '/**\n  * Test\n  */\n'}, 'globalVars/',
         null, null, null, function(name, type, baseFolder) { return path.join(baseFolder, name) + '.json'; }],
     [{modifyVars: true}, 'modifyVars/',

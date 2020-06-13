@@ -123,17 +123,14 @@ module.exports = function() {
         });
     }
 
-    function testSourcemapWithoutAnnotation(name, err, compiledLess, doReplacements, sourcemap, baseFolder) {
+    function testSourcemapWithoutAnnotation(name, err, compiledLess, _doReplacements, sourcemap, baseFolder) {
         if (err) {
             fail('ERROR: ' + (err && err.message));
             return;
         }
-        // Check the sourceMappingURL at the bottom of the file
-        var expectedSourceMapURL = name + '.css.map',
-            sourceMappingPrefix = '/*# sourceMappingURL=',
-            sourceMappingSuffix = ' */',
-            expectedCSSAppendage = sourceMappingPrefix + expectedSourceMapURL + sourceMappingSuffix;
-        if (compiledLess.endsWith(expectedCSSAppendage)) {
+        // This matches with strings that end($) with source mapping url annotation.
+        var sourceMapRegExp = /\/\*# sourceMappingURL=.+\.css\.map \*\/$/;
+        if (sourceMapRegExp.test(compiledLess)) {
             fail('ERROR: sourceMappingURL found in ' + baseFolder + '/' + name + '.css.');
             return;
         }
@@ -341,16 +338,13 @@ module.exports = function() {
                 options.sourceMap = {
                     sourceMapOutputFilename: name + '.css',
                     sourceMapBasepath: path.join(process.cwd(), baseFolder),
-                    sourceMapRootpath: 'testweb/'
+                    sourceMapRootpath: 'testweb/',
+                    disableSourcemapAnnotation: options.sourceMap.disableSourcemapAnnotation
                 };
                 // This options is normally set by the bin/lessc script. Setting it causes the sourceMappingURL comment to be appended to the CSS
                 // output. The value is designed to allow the sourceMapBasepath option to be tested, as it should be removed by less before
                 // setting the sourceMappingURL value, leaving just the sourceMapOutputFilename and .map extension.
                 options.sourceMap.sourceMapFilename = options.sourceMap.sourceMapBasepath + '/' + options.sourceMap.sourceMapOutputFilename + '.map';
-            }
-
-            if (options.sourceMap && !options.sourceMap.disableSourcemapAnnotation) {
-                options.sourceMap.disableSourcemapAnnotation = options.disableSourcemapAnnotation;
             }
 
             options.getVars = function(file) {
